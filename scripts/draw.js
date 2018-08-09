@@ -14,11 +14,27 @@ function setup() {
   background(220);
 
   drawTriangle();
+  orthos = [];
+  vertices.forEach((v, i) => {
+    const next = (i+1) % 3;
+    const other = vertices[next];
+    const p = findMidpoint(v, other);
+    const m = findSlope(v, other);
+    orthos.push({m: m, p: p});
+  });
 }
 
 function draw() {
   background(220);
   drawTriangle();
+  orthos = [];
+  vertices.forEach((v, i) => {
+    const next = (i+1) % 3;
+    const other = vertices[next];
+    const p = findMidpoint(v, other);
+    const m = findSlope(v, other);
+    orthos.push({m: m, p: p});
+  });
   orthos.forEach(o => {
     drawLine(o.m, o.p);
   });
@@ -41,7 +57,7 @@ function drawTriangle() {
 
 function mouseMoved() {
   // console.log(mouseX, mouseY);
-  orthos = [];
+  // orthos = [];
   vertices.forEach((v, i) => {
     if (abs(mouseX - v.x) < mouseSens && abs(mouseY - v.y) < mouseSens) {
       // console.log('ay');
@@ -55,9 +71,13 @@ function mouseMoved() {
     // const p = findMidpoint(v, other);
     // const m = findSlope(v, other);
     // orthos.push({m: m, p: p});
+
+    // const radius = dist()
     // drawLine(m, p);
     // console.log(m, s);
   });
+
+  // const radius = dist(vertices[0].x, vertices[0].y,
 }
 
 // It seems we can get rid of this -- mouseDragged triggers it:
@@ -74,15 +94,19 @@ function mouseDragged() {
     grabbing = true; // not sure whether this is needed
     grabbed_vtx.x = mouseX;
     grabbed_vtx.y = mouseY;
-
-    vertices.forEach((v, i) => {
-      const next = (i+1) % 3;
-      const other = vertices[next];
-      const p = findMidpoint(v, other);
-      const m = findSlope(v, other);
-      orthos.push({m: m, p: p});
-    });
   }
+}
+
+function mouseReleased() {
+  console.log(orthos);
+  // orthos = [];
+  // vertices.forEach((v, i) => {
+  //   const next = (i+1) % 3;
+  //   const other = vertices[next];
+  //   const p = findMidpoint(v, other);
+  //   const m = findSlope(v, other);
+  //   orthos.push({m: m, p: p});
+  // });
 }
 
 function findMidpoint(p1, p2) {
