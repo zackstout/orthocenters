@@ -28,6 +28,7 @@ function draw() {
   background(220);
   drawTriangle();
   orthos = [];
+
   // Calculate new orthogonal lines given current vertices:
   vertices.forEach((v, i) => {
     const next = (i+1) % 3;
@@ -43,7 +44,6 @@ function draw() {
 
   // Determine where first two orthos intersect:
   // AH! for some reason we're calcuating inverse slope in the drawLine, instead of passing it in. So need to calculate it here.
-
   let center = {};
   center.x = (orthos[0].p.y - orthos[1].p.y - 1/orthos[1].m * orthos[1].p.x + 1/orthos[0].m * orthos[0].p.x)/(1/orthos[0].m - 1/orthos[1].m);
   center.y = orthos[1].p.y - 1/orthos[1].m * (center.x - orthos[1].p.x);
@@ -56,6 +56,33 @@ function draw() {
   stroke('steelblue');
   ellipse(center.x, center.y, 2 * radius);
 
+  // Determine incenter:
+  let incenter = {};
+  const v1 = vertices[0];
+  const v2 = vertices[1];
+  const v3 = vertices[2];
+  const d12 = dist(v1.x, v1.y, v2.x, v2.y);
+  const d23 = dist(v2.x, v2.y, v3.x, v3.y);
+  const d31 = dist(v3.x, v3.y, v1.x, v1.y);
+  const peri = d12 + d23 + d31;
+  incenter.x = (d12*v3.x + d23*v1.x + d31*v2.x) / peri;
+  incenter.y = (d12*v3.y + d23*v1.y + d31*v2.y) / peri;
+  fill('tomato');
+  ellipse(incenter.x, incenter.y, 4);
+
+  // Draw lines connecting vertices to incenter:
+  stroke('tomato');
+  line(incenter.x, incenter.y, v1.x, v1.y);
+  line(incenter.x, incenter.y, v2.x, v2.y);
+  line(incenter.x, incenter.y, v3.x, v3.y);
+
+  // Determine radial length of incircle:
+  // Use law of cosines:
+  const angle = acos((d12*d12 + d23*d23 - d31*d31) / (2 * d12 * d23));
+  const incenter_to_vtx = dist(incenter.x, incenter.y, vertices[1].x, vertices[1].y);
+  const inradius = incenter_to_vtx * sin(angle/2);
+  noFill();
+  ellipse(incenter.x, incenter.y, inradius * 2);
 }
 
 
@@ -74,17 +101,16 @@ function drawTriangle() {
 }
 
 function mouseMoved() {
-  // console.log(mouseX, mouseY);
-
   vertices.forEach((v, i) => {
     if (abs(mouseX - v.x) < mouseSens && abs(mouseY - v.y) < mouseSens) {
-      // console.log('ay');
       grabbing_staged = true;
       grabbed_vtx = v;
-
     }
-
   });
+}
+
+function mouseReleased() {
+  console.log(orthos);
 }
 
 // Moves the grabbed vertex:
@@ -94,13 +120,6 @@ function mouseDragged() {
     grabbed_vtx.x = mouseX;
     grabbed_vtx.y = mouseY;
   }
-}
-
-function mouseReleased() {
-  console.log(orthos);
-
-
-
 }
 
 function findMidpoint(p1, p2) {
