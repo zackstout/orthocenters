@@ -43,17 +43,32 @@ function mouseMoved() {
   });
 }
 
-function mousePressed() {
-  if (grabbing_staged) {
-    grabbing = true;
-    console.log('pressed');
-  }
+// It seems we can get rid of this -- mouseDragged triggers it:
+// function mousePressed() {
+//   if (grabbing_staged) {
+//     grabbing = true;
+//     // console.log('pressed');
+//   }
+// }
 
-}
-
+// Moves the grabbed vertex:
 function mouseDragged() {
-  if (grabbing) {
+  if (grabbing_staged) {
+    grabbing = true; // not sure whether this is needed
     grabbed_vtx.x = mouseX;
     grabbed_vtx.y = mouseY;
   }
 }
+
+// Depends upon the global vertices array:
+function drawOrthLines() {
+
+}
+
+
+// NOTE: Ok the UI isn't perfect, but it's kind of nice to be able to click a new spot and have most-recently-clicked vertex go there. I'm into it. (DON'T use the following function.)
+// function mouseReleased() {
+//   grabbing_staged = false;
+//   grabbing = false;
+//   grabbed_vtx = {};
+// }
