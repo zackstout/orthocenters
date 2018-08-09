@@ -42,13 +42,19 @@ function draw() {
   });
 
   // Determine where first two orthos intersect:
-  const center = {
-    x: (orthos[0].p.y - orthos[1].p.y - 1/orthos[1].m * orthos[1].p.x + 1/orthos[0].m * orthos[0].p.x)/(1/orthos[0].m - 1/orthos[1].m),
-    y: (orthos[0].p.y - orthos[1].p.y) / (orthos[1].m - orthos[0].m),
-  };
+  // AH! for some reason we're calcuating inverse slope in the drawLine, instead of passing it in. So need to calculate it here.
 
+  let center = {};
+  center.x = (orthos[0].p.y - orthos[1].p.y - 1/orthos[1].m * orthos[1].p.x + 1/orthos[0].m * orthos[0].p.x)/(1/orthos[0].m - 1/orthos[1].m);
+  center.y = orthos[1].p.y - 1/orthos[1].m * (center.x - orthos[1].p.x);
+
+  const radius = dist(center.x, center.y, vertices[0].x, vertices[0].y);
+
+  fill('steelblue');
   ellipse(center.x, center.y, 4);
-
+  noFill();
+  stroke('steelblue');
+  ellipse(center.x, center.y, 2 * radius);
 
 }
 
