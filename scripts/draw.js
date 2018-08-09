@@ -83,6 +83,7 @@ function draw() {
   const inradius = incenter_to_vtx * sin(angle/2);
   noFill();
   ellipse(incenter.x, incenter.y, inradius * 2);
+  // console.log(radius/inradius);
 }
 
 
