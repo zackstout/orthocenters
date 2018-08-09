@@ -28,6 +28,7 @@ function draw() {
   background(220);
   drawTriangle();
   orthos = [];
+  // Calculate new orthogonal lines given current vertices:
   vertices.forEach((v, i) => {
     const next = (i+1) % 3;
     const other = vertices[next];
@@ -35,9 +36,20 @@ function draw() {
     const m = findSlope(v, other);
     orthos.push({m: m, p: p});
   });
+  // Draw orthogonal lines:
   orthos.forEach(o => {
     drawLine(o.m, o.p);
   });
+
+  // Determine where first two orthos intersect:
+  const center = {
+    x: (orthos[0].p.y - orthos[1].p.y - 1/orthos[1].m * orthos[1].p.x + 1/orthos[0].m * orthos[0].p.x)/(1/orthos[0].m - 1/orthos[1].m),
+    y: (orthos[0].p.y - orthos[1].p.y) / (orthos[1].m - orthos[0].m),
+  };
+
+  ellipse(center.x, center.y, 4);
+
+
 }
 
 
@@ -57,7 +69,7 @@ function drawTriangle() {
 
 function mouseMoved() {
   // console.log(mouseX, mouseY);
-  // orthos = [];
+
   vertices.forEach((v, i) => {
     if (abs(mouseX - v.x) < mouseSens && abs(mouseY - v.y) < mouseSens) {
       // console.log('ay');
@@ -66,27 +78,8 @@ function mouseMoved() {
 
     }
 
-    // const next = (i+1) % 3;
-    // const other = vertices[next];
-    // const p = findMidpoint(v, other);
-    // const m = findSlope(v, other);
-    // orthos.push({m: m, p: p});
-
-    // const radius = dist()
-    // drawLine(m, p);
-    // console.log(m, s);
   });
-
-  // const radius = dist(vertices[0].x, vertices[0].y,
 }
-
-// It seems we can get rid of this -- mouseDragged triggers it:
-// function mousePressed() {
-//   if (grabbing_staged) {
-//     grabbing = true;
-//     // console.log('pressed');
-//   }
-// }
 
 // Moves the grabbed vertex:
 function mouseDragged() {
@@ -99,14 +92,9 @@ function mouseDragged() {
 
 function mouseReleased() {
   console.log(orthos);
-  // orthos = [];
-  // vertices.forEach((v, i) => {
-  //   const next = (i+1) % 3;
-  //   const other = vertices[next];
-  //   const p = findMidpoint(v, other);
-  //   const m = findSlope(v, other);
-  //   orthos.push({m: m, p: p});
-  // });
+
+
+
 }
 
 function findMidpoint(p1, p2) {
