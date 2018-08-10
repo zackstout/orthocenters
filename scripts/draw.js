@@ -7,8 +7,6 @@ let grabbed_vtx;
 const orthoLen = 800;
 let orthos = [];
 
-// expected mdpts: (200, 350), (400, 250), (500, 500) -- It works!
-
 function setup() {
   createCanvas(800, 800);
   background(220);
@@ -92,7 +90,6 @@ function drawTriangle() {
     const next = (i+1) % 3; // 2 goes to 0;
     const p1 = vertices[i];
     const p2 = vertices[next];
-    // console.log(p1, p2);
     stroke('black');
     line(p1.x, p1.y, p2.x, p2.y);
     noStroke();
@@ -102,22 +99,21 @@ function drawTriangle() {
 }
 
 function mouseMoved() {
+  grabbing_staged = false; // this makes grabbing_staged meaningful: now clicking someone WON'T just bring the most recently clicked vertex to that point.
   vertices.forEach((v, i) => {
     if (abs(mouseX - v.x) < mouseSens && abs(mouseY - v.y) < mouseSens) {
       grabbing_staged = true;
       grabbed_vtx = v;
     }
   });
-}
-
-function mouseReleased() {
-  console.log(orthos);
+  cursor_style = grabbing_staged ? HAND : ARROW;
+  cursor(cursor_style);
 }
 
 // Moves the grabbed vertex:
 function mouseDragged() {
   if (grabbing_staged) {
-    grabbing = true; // not sure whether this is needed
+    grabbing = true;
     grabbed_vtx.x = mouseX;
     grabbed_vtx.y = mouseY;
   }
@@ -134,6 +130,7 @@ function findSlope(p1, p2) {
   return (p1.y - p2.y) / (p1.x - p2.x);
 }
 
+// For orthogonal bisectors:
 function drawLine(m, p) {
   // console.log(m, p);
   const inv_slope = - 1 / m; // ignore the minus sign because of negative-y orientation with canvas.
@@ -145,14 +142,3 @@ function drawLine(m, p) {
   stroke('green');
   line(xStart, yStart, xEnd, yEnd);
 }
-
-
-
-
-
-// NOTE: Ok the UI isn't perfect, but it's kind of nice to be able to click a new spot and have most-recently-clicked vertex go there. I'm into it. (DON'T use the following function.)
-// function mouseReleased() {
-//   grabbing_staged = false;
-//   grabbing = false;
-//   grabbed_vtx = {};
-// }
