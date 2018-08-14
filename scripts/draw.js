@@ -6,10 +6,38 @@ let grabbing = false;
 let grabbed_vtx;
 const orthoLen = 800;
 let orthos = [];
+var showingCirc = true;
+var showingIn = false;
 
 function setup() {
   createCanvas(800, 800);
   background(220);
+  button1 = createButton('Hide circumcircle');
+  button2 = createButton('Show incircle');
+
+  button1.position(840, 65);
+  button2.position(840, 95);
+
+  // Need to figure out how to convert function with params into param-less function to pass them as cbs and DRY:
+  button1.mousePressed(() => {
+    if (showingCirc) {
+      button1.html('Show circumcircle');
+      showingCirc = false;
+    } else {
+      button1.html('Hide circumcircle');
+      showingCirc = true;
+    }
+  });
+
+  button2.mousePressed(() => {
+    if (showingIn) {
+      button2.html('Show incircle');
+      showingIn = false;
+    } else {
+      button2.html('Hide incircle');
+      showingIn = true;
+    }
+  });
 
   drawTriangle();
   orthos = [];
@@ -36,52 +64,57 @@ function draw() {
     orthos.push({m: m, p: p});
   });
   // Draw orthogonal lines:
-  orthos.forEach(o => {
-    drawLine(o.m, o.p);
-  });
+  if (showingCirc) {
+    orthos.forEach(o => {
+      drawLine(o.m, o.p);
+    });
 
-  // Determine where first two orthos intersect:
-  // AH! for some reason we're calcuating inverse slope in the drawLine, instead of passing it in. So need to calculate it here.
-  let center = {};
-  center.x = (orthos[0].p.y - orthos[1].p.y - 1/orthos[1].m * orthos[1].p.x + 1/orthos[0].m * orthos[0].p.x)/(1/orthos[0].m - 1/orthos[1].m);
-  center.y = orthos[1].p.y - 1/orthos[1].m * (center.x - orthos[1].p.x);
+    // Determine where first two orthos intersect:
+    // AH! for some reason we're calcuating inverse slope in the drawLine, instead of passing it in. So need to calculate it here.
+    let center = {};
+    center.x = (orthos[0].p.y - orthos[1].p.y - 1/orthos[1].m * orthos[1].p.x + 1/orthos[0].m * orthos[0].p.x)/(1/orthos[0].m - 1/orthos[1].m);
+    center.y = orthos[1].p.y - 1/orthos[1].m * (center.x - orthos[1].p.x);
 
-  const radius = dist(center.x, center.y, vertices[0].x, vertices[0].y);
+    const radius = dist(center.x, center.y, vertices[0].x, vertices[0].y);
 
-  fill('steelblue');
-  ellipse(center.x, center.y, 4);
-  noFill();
-  stroke('steelblue');
-  ellipse(center.x, center.y, 2 * radius);
+    fill('steelblue');
+    ellipse(center.x, center.y, 4);
+    noFill();
+    stroke('steelblue');
+    ellipse(center.x, center.y, 2 * radius);
+  }
 
-  // Determine incenter:
-  let incenter = {};
-  const v1 = vertices[0];
-  const v2 = vertices[1];
-  const v3 = vertices[2];
-  const d12 = dist(v1.x, v1.y, v2.x, v2.y);
-  const d23 = dist(v2.x, v2.y, v3.x, v3.y);
-  const d31 = dist(v3.x, v3.y, v1.x, v1.y);
-  const peri = d12 + d23 + d31;
-  incenter.x = (d12*v3.x + d23*v1.x + d31*v2.x) / peri;
-  incenter.y = (d12*v3.y + d23*v1.y + d31*v2.y) / peri;
-  fill('tomato');
-  ellipse(incenter.x, incenter.y, 4);
+  if (showingIn) {
 
-  // Draw lines connecting vertices to incenter:
-  stroke('tomato');
-  line(incenter.x, incenter.y, v1.x, v1.y);
-  line(incenter.x, incenter.y, v2.x, v2.y);
-  line(incenter.x, incenter.y, v3.x, v3.y);
+    // Determine incenter:
+    let incenter = {};
+    const v1 = vertices[0];
+    const v2 = vertices[1];
+    const v3 = vertices[2];
+    const d12 = dist(v1.x, v1.y, v2.x, v2.y);
+    const d23 = dist(v2.x, v2.y, v3.x, v3.y);
+    const d31 = dist(v3.x, v3.y, v1.x, v1.y);
+    const peri = d12 + d23 + d31;
+    incenter.x = (d12*v3.x + d23*v1.x + d31*v2.x) / peri;
+    incenter.y = (d12*v3.y + d23*v1.y + d31*v2.y) / peri;
+    fill('tomato');
+    ellipse(incenter.x, incenter.y, 4);
 
-  // Determine radial length of incircle:
-  // Use law of cosines:
-  const angle = acos((d12*d12 + d23*d23 - d31*d31) / (2 * d12 * d23));
-  const incenter_to_vtx = dist(incenter.x, incenter.y, vertices[1].x, vertices[1].y);
-  const inradius = incenter_to_vtx * sin(angle/2);
-  noFill();
-  ellipse(incenter.x, incenter.y, inradius * 2);
-  // console.log(radius/inradius);
+    // Draw lines connecting vertices to incenter:
+    stroke('tomato');
+    line(incenter.x, incenter.y, v1.x, v1.y);
+    line(incenter.x, incenter.y, v2.x, v2.y);
+    line(incenter.x, incenter.y, v3.x, v3.y);
+
+    // Determine radial length of incircle:
+    // Use law of cosines:
+    const angle = acos((d12*d12 + d23*d23 - d31*d31) / (2 * d12 * d23));
+    const incenter_to_vtx = dist(incenter.x, incenter.y, vertices[1].x, vertices[1].y);
+    const inradius = incenter_to_vtx * sin(angle/2);
+    noFill();
+    ellipse(incenter.x, incenter.y, inradius * 2);
+    // console.log(radius/inradius);
+  }
 }
 
 
