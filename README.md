@@ -2,6 +2,8 @@
 # Orthogonal Circles
 Practicing building an interactive user interface, where user can click and drag on vertices to change the image that is drawn.
 
+Here's the live [demo](https://zackstout.github.io/orthocenters/).
+
 Users can change the triangle by dragging its vertices, changing its incircle and circumcircle (whose centers are the intersection points of the triangle's angle bisectors and orthogonal bisectors, respectively).
 
 ## Screenshot:

@@ -1,6 +1,8 @@
 
 const vertices = [{x: 100, y: 100}, {x: 300, y: 600}, {x: 700, y: 400}]; // will making them objects create a mutability problem?
 const mouseSens = 9;
+let vert_angles = [[], [], []];
+let angle_diffs = [];
 let grabbing_staged = false;
 let grabbing = false;
 let grabbed_vtx;
@@ -14,6 +16,11 @@ function setup() {
   background(220);
   button1 = createButton('Hide circumcircle');
   button2 = createButton('Show incircle');
+
+  // const m = findSlope(vertices[0], vertices[1]);
+  // console.log(m);
+  vertices.forEach(v => trisectAngle(v));
+  trisectAngles();
 
   button1.position(840, 65);
   button2.position(840, 95);
@@ -48,12 +55,21 @@ function setup() {
     const m = findSlope(v, other);
     orthos.push({m: m, p: p});
   });
-}
+} // end Setup
+
 
 function draw() {
   background(220);
   drawTriangle();
   orthos = [];
+
+  angle_diffs = [];
+  for (let i=0; i<3; i++) {
+    vert_angles[i] = [];
+  }
+  vertices.forEach(v => trisectAngle(v));
+  drawTrisections();
+
 
   // Calculate new orthogonal lines given current vertices:
   vertices.forEach((v, i) => {
@@ -115,7 +131,7 @@ function draw() {
     ellipse(incenter.x, incenter.y, inradius * 2);
     // console.log(radius/inradius);
   }
-}
+} // end Draw
 
 
 function drawTriangle() {
@@ -124,10 +140,117 @@ function drawTriangle() {
     const p1 = vertices[i];
     const p2 = vertices[next];
     stroke('black');
+
     line(p1.x, p1.y, p2.x, p2.y);
     noStroke();
     fill('steelblue'); // lol blue steel
     ellipse(p1.x, p1.y, 4);
+  }
+}
+
+function trisectAngles() {
+  const v1 = vertices[0];
+  const v2 = vertices[1];
+  const v3 = vertices[2];
+  const d12 = dist(v1.x, v1.y, v2.x, v2.y);
+  const d23 = dist(v2.x, v2.y, v3.x, v3.y);
+  const d31 = dist(v3.x, v3.y, v1.x, v1.y);
+  const angle1 = acos((d12*d12 + d23*d23 - d31*d31) / (2 * d12 * d23));
+  const angle2 = acos((d31*d31 + d23*d23 - d12*d12) / (2 * d31 * d23));
+  const angle3 = acos((d12*d12 + d31*d31 - d23*d23) / (2 * d12 * d31));
+
+  console.log(angle1, angle2, angle3);
+}
+
+function trisectAngle(v) {
+  // let slopes = [];
+
+
+  for (let i=0; i < 3; i++) {
+    const vtx = vertices[i];
+    if (v.x != vtx.x || v.y != vtx.y) {
+      const m = findSlope(v, vtx);
+      const angle = atan(m);
+      // console.log(angle);
+      // push();
+      // translate(v.x, v.y);
+
+      const rot_angle = angle + PI/2;
+
+      vert_angles[i].push(rot_angle);
+
+      // rotate(-abs(PI/2-angle));
+      // stroke('red');
+      // line(0, 0, 0, 30); // Duh, this has to be perfecly vertical...
+      //
+      // // ellipse(0, 0, 100);
+      // pop();
+      // slopes.push(findSlope(v, vtx));
+    }
+  }
+
+  // console.log(slopes);
+}
+
+function drawTrisections() {
+  const leg = 800;
+  for (let i=0; i < 3; i++) {
+    const v = vertices[i];
+    const as = vert_angles[i];
+    const max_a = max(as[1], as[0]);
+    const min_a = min(as[1], as[0]);
+    angle_diffs.push(min_a - max_a);
+
+  }
+
+  let max_angle_diff = 0;
+  let max_angle_index = -1;
+  for (i=0; i < 3; i++) {
+    if (abs(angle_diffs[i]) > max_angle_diff) {
+      max_angle_diff = abs(angle_diffs[i]);
+      max_angle_index = i;
+    }
+  }
+
+
+  for (let i=0; i < 3; i++) {
+    const v = vertices[i];
+    const as = vert_angles[i];
+    const max_a = max(as[1], as[0]);
+    const min_a = min(as[1], as[0]);
+    push();
+    translate(v.x, v.y);
+    rotate(max_a);
+    stroke('red');
+    line(0, 0, 0, 30);
+
+    // ok wow this just might be it:
+    if (i == max_angle_index) {
+      fill('yellow');
+    }
+    // ellipse(0, 0, 10);
+
+    let ang_diff;
+    if (i == max_angle_index) {
+      const span =  (PI - (max_a - min_a));
+      ang_diff = span/3;
+
+    } else {
+      ang_diff = (min_a - max_a)/3;
+    }
+    rotate(ang_diff);
+    stroke('blue');
+    line(0, -leg, 0, leg);
+
+    rotate(ang_diff);
+    stroke('blue');
+    line(0, -leg, 0, leg);
+
+    rotate(ang_diff);
+    stroke('purple');
+    line(0, -leg, 0, leg);
+
+    pop();
   }
 }
 
@@ -162,6 +285,7 @@ function findMidpoint(p1, p2) {
 function findSlope(p1, p2) {
   return (p1.y - p2.y) / (p1.x - p2.x);
 }
+
 
 // For orthogonal bisectors:
 function drawLine(m, p) {
