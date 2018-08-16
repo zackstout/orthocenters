@@ -3,6 +3,8 @@ const vertices = [{x: 100, y: 100}, {x: 300, y: 600}, {x: 700, y: 400}]; // will
 const mouseSens = 9;
 let vert_angles = [[], [], []];
 let angle_diffs = [];
+let real_vert_angles = [[], [], []];
+
 let grabbing_staged = false;
 let grabbing = false;
 let grabbed_vtx;
@@ -10,20 +12,21 @@ const orthoLen = 800;
 let orthos = [];
 var showingCirc = true;
 var showingIn = false;
+var showingTri = false;
 
 function setup() {
   createCanvas(800, 800);
   background(220);
   button1 = createButton('Hide circumcircle');
   button2 = createButton('Show incircle');
+  button3 = createButton('Show trisectors');
 
-  // const m = findSlope(vertices[0], vertices[1]);
-  // console.log(m);
-  vertices.forEach(v => trisectAngle(v));
-  trisectAngles();
+
+  // vertices.forEach(v => trisectAngle(v));
 
   button1.position(840, 65);
   button2.position(840, 95);
+  button3.position(840, 125);
 
   // Need to figure out how to convert function with params into param-less function to pass them as cbs and DRY:
   button1.mousePressed(() => {
@@ -46,6 +49,16 @@ function setup() {
     }
   });
 
+  button3.mousePressed(() => {
+    if (showingTri) {
+      button3.html('Show trisectors');
+      showingTri = false;
+    } else {
+      button3.html('Hide trisectors');
+      showingTri = true;
+    }
+  });
+
   drawTriangle();
   orthos = [];
   vertices.forEach((v, i) => {
@@ -63,12 +76,16 @@ function draw() {
   drawTriangle();
   orthos = [];
 
+
   angle_diffs = [];
   for (let i=0; i<3; i++) {
     vert_angles[i] = [];
   }
   vertices.forEach(v => trisectAngle(v));
-  drawTrisections();
+  if (showingTri) {
+    drawTrisections();
+
+  }
 
 
   // Calculate new orthogonal lines given current vertices:
@@ -148,59 +165,33 @@ function drawTriangle() {
   }
 }
 
-function trisectAngles() {
-  const v1 = vertices[0];
-  const v2 = vertices[1];
-  const v3 = vertices[2];
-  const d12 = dist(v1.x, v1.y, v2.x, v2.y);
-  const d23 = dist(v2.x, v2.y, v3.x, v3.y);
-  const d31 = dist(v3.x, v3.y, v1.x, v1.y);
-  const angle1 = acos((d12*d12 + d23*d23 - d31*d31) / (2 * d12 * d23));
-  const angle2 = acos((d31*d31 + d23*d23 - d12*d12) / (2 * d31 * d23));
-  const angle3 = acos((d12*d12 + d31*d31 - d23*d23) / (2 * d12 * d31));
 
-  console.log(angle1, angle2, angle3);
-}
 
 function trisectAngle(v) {
-  // let slopes = [];
-
 
   for (let i=0; i < 3; i++) {
     const vtx = vertices[i];
     if (v.x != vtx.x || v.y != vtx.y) {
       const m = findSlope(v, vtx);
       const angle = atan(m);
-      // console.log(angle);
-      // push();
-      // translate(v.x, v.y);
 
       const rot_angle = angle + PI/2;
 
       vert_angles[i].push(rot_angle);
 
-      // rotate(-abs(PI/2-angle));
-      // stroke('red');
-      // line(0, 0, 0, 30); // Duh, this has to be perfecly vertical...
-      //
-      // // ellipse(0, 0, 100);
-      // pop();
-      // slopes.push(findSlope(v, vtx));
     }
   }
-
-  // console.log(slopes);
 }
 
 function drawTrisections() {
   const leg = 800;
+  real_vert_angles = [[], [], []]; // The issue with converting rotating-angles back into slopes is that we drew along the y-axis rather than the x...
+
   for (let i=0; i < 3; i++) {
-    const v = vertices[i];
     const as = vert_angles[i];
     const max_a = max(as[1], as[0]);
     const min_a = min(as[1], as[0]);
     angle_diffs.push(min_a - max_a);
-
   }
 
   let max_angle_diff = 0;
@@ -212,12 +203,12 @@ function drawTrisections() {
     }
   }
 
-
   for (let i=0; i < 3; i++) {
     const v = vertices[i];
     const as = vert_angles[i];
     const max_a = max(as[1], as[0]);
     const min_a = min(as[1], as[0]);
+
     push();
     translate(v.x, v.y);
     rotate(max_a);
@@ -234,17 +225,19 @@ function drawTrisections() {
     if (i == max_angle_index) {
       const span =  (PI - (max_a - min_a));
       ang_diff = span/3;
-
     } else {
       ang_diff = (min_a - max_a)/3;
     }
-    rotate(ang_diff);
-    stroke('blue');
-    line(0, -leg, 0, leg);
 
     rotate(ang_diff);
     stroke('blue');
     line(0, -leg, 0, leg);
+    real_vert_angles[i].push(max_a + ang_diff);
+
+    rotate(ang_diff);
+    stroke('blue');
+    line(0, -leg, 0, leg);
+    real_vert_angles[i].push(max_a + 2*ang_diff);
 
     rotate(ang_diff);
     stroke('purple');
@@ -254,6 +247,8 @@ function drawTrisections() {
   }
 }
 
+
+
 function mouseMoved() {
   grabbing_staged = false; // this makes grabbing_staged meaningful: now clicking someone WON'T just bring the most recently clicked vertex to that point.
   vertices.forEach((v, i) => {
@@ -262,7 +257,7 @@ function mouseMoved() {
       grabbed_vtx = v;
     }
   });
-  cursor_style = grabbing_staged ? HAND : ARROW;
+  const cursor_style = grabbing_staged ? HAND : ARROW;
   cursor(cursor_style);
 }
 
